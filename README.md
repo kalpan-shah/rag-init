@@ -1,0 +1,3 @@
+# RAG Init
+
+Understanding RAG
