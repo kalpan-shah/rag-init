@@ -6,13 +6,14 @@
 @author:        Kalpan Shah
 @version:       1.0.0 
 """
-from typing import List
+from typing import List, Set
 import os
 import json
 import string
 
 # Assuming running from the project root, adjust path accordingly later if needed
 movie_data_json = os.path.join(os.getcwd(),'data', 'movies.json')
+stop_word_file = os.path.join(os.getcwd(), 'data', 'stopwords.txt')
 
 def load_data(file_path: str) -> dict:
     """
@@ -22,6 +23,17 @@ def load_data(file_path: str) -> dict:
         data = json.load(f)
     return data
 
+
+def load_stop_words(file_path: str) -> Set[str]:
+    """
+        Helper function to load stop words from a text file and return a list of stop words
+    """
+    with open(file_path, 'r', encoding='utf-8') as f:
+        _words = f.read().splitlines()
+    return set(_words)
+
+
+stop_words: Set[str] = load_stop_words(stop_word_file)
 movie_data: List[dict] = load_data(movie_data_json)['movies']
 
 def preprocess_text(text: str) -> str:
@@ -46,10 +58,12 @@ def get_tokens(text: str) -> List[str]:
     """
     _tokens = text.split()
     # remove empty tokens if any
-    _tokens = list(filter(str.strip, _tokens))
+    _tokens = [token for token in _tokens if token.strip()]
+
+    # remove stop words
+    _tokens = [token for token in _tokens if token not in stop_words]
+
     return _tokens
-
-
 
 
 def search_movies(query: str) -> List[dict]:
@@ -71,9 +85,10 @@ def search_movies(query: str) -> List[dict]:
 
         # text preprocessing
         _movie_title = preprocess_text(movie['title'])
-        # _movie_title_tokens = get_tokens(_movie_title)
+        _movie_title_tokens = get_tokens(_movie_title)
+        _n_movie_title = " ".join(_movie_title_tokens)
 
-        _token_match = any(token in _movie_title for token  in _query_tokens)
+        _token_match = any(token in _n_movie_title for token  in _query_tokens)
         if _token_match:
             results.append(movie)
 
