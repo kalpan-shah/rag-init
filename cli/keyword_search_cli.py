@@ -12,7 +12,7 @@ import argparse
 
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
-from query_movie_data import search_movies # pylint: disable=wrong-import-position
+from query_movie_data import search_movies, build_index # pylint: disable=wrong-import-position
 
 def main() -> None:
     """
@@ -22,11 +22,15 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", help="Available Commands")
 
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
+    build_parser = subparsers.add_parser("build", help="Build the inverted index")
     search_parser.add_argument("query", type=str, help="search query")
 
     args = parser.parse_args()
 
     match args.command:
+        case "build":
+            # print("Building the inverted index...")
+            build_index()
         case "search":
             if args.query:
                 print(f"Searching for: {args.query}")

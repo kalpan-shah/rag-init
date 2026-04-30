@@ -8,7 +8,16 @@
 """
 from typing import List 
 from data_preprocessing import preprocess_text, get_tokens
-from data_handler import movie_data
+from data_handler import movie_data 
+from inverted_index import InvertedIndex 
+
+def build_index() -> None:
+    global index
+    index = InvertedIndex()
+    index.build()
+    docs = index.get_documents('merida')
+    first_val = docs[0]
+    print(f"First document for token 'merida' = {first_val}") 
 
 def search_movies(query: str) -> List[dict]:
     """

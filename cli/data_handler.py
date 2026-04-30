@@ -15,6 +15,14 @@ from typing import List, Set
 movie_data_json = os.path.join(os.getcwd(),'data', 'movies.json')
 stop_word_file = os.path.join(os.getcwd(), 'data', 'stopwords.txt')
 
+# disk path for the inverted index file
+cache_dir = os.path.join(os.getcwd(), 'cache')
+if not os.path.exists(cache_dir):
+    os.makedirs(cache_dir)
+
+index_file_path = os.path.join(cache_dir, 'index.pkl')
+docmap_file_path = os.path.join(cache_dir, 'docmap.pkl')
+
 def load_data(file_path: str) -> dict:
     """
         Helper function to just load the json and return the data dict

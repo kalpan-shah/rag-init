@@ -12,3 +12,4 @@ wheels/
 
 # Datasets
 data/
+cache/
