@@ -1,4 +1,18 @@
+""" 
+@file:          cli/keyword_search_cli.py
+@description:   Keyword search CLI for finding movies
+@date:          29 April 2026 
+@last edited:   30 April 2026
+@author:        Kalpan Shah
+@version:       1.0.0 
+"""
+import os
+import sys
 import argparse
+
+sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
+
+from query_movie_data import search_movies
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword search CLI")
@@ -11,8 +25,10 @@ def main() -> None:
 
     match args.command:
         case "search":
-            print(f"Searching for: {args.query}")
-
+            if args.query:
+                print(f"Searching for: {args.query}")
+                for i, movie in enumerate(search_movies(args.query)):
+                    print(f"{i+1}. {movie['title']}") 
         case _:
             parser.print_help()
 
