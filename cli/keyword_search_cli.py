@@ -12,9 +12,12 @@ import argparse
 
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
-from query_movie_data import search_movies
+from query_movie_data import search_movies # pylint: disable=wrong-import-position
 
 def main() -> None:
+    """
+        Entry point of the CLI App
+    """
     parser = argparse.ArgumentParser(description="Keyword search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available Commands")
 
@@ -28,7 +31,7 @@ def main() -> None:
             if args.query:
                 print(f"Searching for: {args.query}")
                 for i, movie in enumerate(search_movies(args.query)):
-                    print(f"{i+1}. {movie['title']}") 
+                    print(f"{i+1}. {movie['title']}")
         case _:
             parser.print_help()
 

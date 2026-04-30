@@ -18,7 +18,7 @@ def load_data(file_path: str) -> dict:
     """
         Helper function to just load the json and return the data dict
     """
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data
 
@@ -31,14 +31,26 @@ def preprocess_text(text: str) -> str:
         b. punctuation removal
     """
     # a. Case insensitive search
-    text = text.lower() 
+    text = text.lower()
 
-    # b. punctuation removal 
+    # b. punctuation removal
     # Define a translation table that maps punctuation characters to None
     tab = str.maketrans('', '', string.punctuation)  # mapping for removing punctuation
     text = text.translate(tab)  # mapping applied using translate method
 
     return text
+
+def get_tokens(text: str) -> List[str]:
+    """
+        Helper function to tokenize text for better search results
+    """
+    _tokens = text.split()
+    # remove empty tokens if any
+    _tokens = list(filter(str.strip, _tokens))
+    return _tokens
+
+
+
 
 def search_movies(query: str) -> List[dict]:
     """
@@ -46,13 +58,23 @@ def search_movies(query: str) -> List[dict]:
             Text Processing:
                 a. Case insensitive search
                 b. punctuation removal
+                c. tokenization
     """
     results = []
+    _query = preprocess_text(query)
+    _query_tokens = get_tokens(_query)
+
     for movie in movie_data:
-        if not isinstance(movie, dict) and 'title' not in movie:
+        # Check if Valid movie dict
+        if not isinstance(movie, dict) or 'title' not in movie:
             continue
-        _query = preprocess_text(query)
+
+        # text preprocessing
         _movie_title = preprocess_text(movie['title'])
-        if _query in _movie_title:
+        # _movie_title_tokens = get_tokens(_movie_title)
+
+        _token_match = any(token in _movie_title for token  in _query_tokens)
+        if _token_match:
             results.append(movie)
+
     return results
