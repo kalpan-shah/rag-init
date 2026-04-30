@@ -10,6 +10,9 @@ from typing import List, Set
 import os
 import json
 import string
+from nltk.stem import PorterStemmer
+
+stemmer = PorterStemmer()
 
 # Assuming running from the project root, adjust path accordingly later if needed
 movie_data_json = os.path.join(os.getcwd(),'data', 'movies.json')
@@ -62,6 +65,9 @@ def get_tokens(text: str) -> List[str]:
 
     # remove stop words
     _tokens = [token for token in _tokens if token not in stop_words]
+
+    # stemming - reduct to root form
+    _tokens = [stemmer.stem(token) for token in _tokens]
 
     return _tokens
 
