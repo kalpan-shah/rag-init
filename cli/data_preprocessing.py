@@ -29,7 +29,12 @@ def preprocess_text(text: str) -> str:
     tab = str.maketrans('', '', string.punctuation)  # mapping for removing punctuation
     text = text.translate(tab)  # mapping applied using translate method
 
+    if len(text.strip().split()) == 1:
+        # Given its a single token
+        text = stemmer.stem(text.strip())
+
     return text
+
 
 def get_tokens(text: str) -> List[str]:
     """

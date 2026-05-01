@@ -69,3 +69,21 @@ def get_term_frequency(doc_id: int, term: str) -> int:
         print(f"Error loading index: {e}")
         return 0
     return index.get_tf(doc_id, term)
+
+
+def get_inverse_doc_freq(term: str) -> float:
+    """
+        Get the inverse document frequency for a given term.
+
+        Args:
+            term (str): The term to retrieve IDF for.
+
+        Returns:
+            float: The inverse document frequency.
+    """
+    try:
+        index.load()
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return 0.0
+    return index.get_idf(term)

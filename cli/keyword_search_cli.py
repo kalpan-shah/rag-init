@@ -12,7 +12,8 @@ import argparse
 
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
-from query_movie_data import search_movies, build_index, get_term_frequency # pylint: disable=wrong-import-position
+from query_movie_data import search_movies, \
+    build_index, get_term_frequency, get_inverse_doc_freq  # pylint: disable=wrong-import-position
 
 def main() -> None:
     """
@@ -21,13 +22,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available Commands")
 
+    # Keyword search for movie names
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     subparsers.add_parser("build", help="Build the inverted index")
     search_parser.add_argument("query", type=str, help="search query")
 
+    # Get the term frequency for a given document and term
     tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document and term")
     tf_parser.add_argument("doc_id", type=int, help="doc ID to retrieve term frequency for")
     tf_parser.add_argument("term", type=str, help="term to retrieve frequency for")
+
+    # Get the inverse doc frequency for a given term
+    idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency for a term")
+    idf_parser.add_argument("term", type=str, help="term to retrieve inverse document frequency for")
 
     args = parser.parse_args()
 
@@ -44,6 +51,11 @@ def main() -> None:
             if args.doc_id and args.term:
                 _tf: int = get_term_frequency(args.doc_id, args.term)
                 print(_tf)
+
+        case "idf":
+            if args.term:
+                _idf: float = get_inverse_doc_freq(args.term)
+                print(f"Inverse document frequency of '{args.term}': {_idf:.2f}")
 
         case _:
             parser.print_help()

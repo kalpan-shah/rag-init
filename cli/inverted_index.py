@@ -7,6 +7,7 @@
 @version:       1.0.0 
 """
 import os
+import math
 from typing import Dict, List, Set
 from collections import Counter
 import pickle
@@ -31,6 +32,7 @@ class InvertedIndex:
         """ 
         # preprocess text
         trimmed_text = preprocess_text(text)
+        
         # a. get tokens
         tokens = get_tokens(trimmed_text)
         # b. update index
@@ -39,9 +41,9 @@ class InvertedIndex:
             if token not in self.index:
                 self.index[token] = set()
             # update the set of document IDs for the token
-            self.index[token].add(doc_id)
+            self.index[token].add(doc_id) 
         # c. update docmap
-        self.docmap[doc_id] = text
+        self.docmap[doc_id] = trimmed_text # text
         # d. update term frequencies
         self.term_frequencies[doc_id] = Counter(tokens)
 
@@ -53,9 +55,9 @@ class InvertedIndex:
             Returns:
                 List[int]: A list of document IDs containing the term
         """
-        _doc_ids = list(self.index.get(term.lower(), set()))
-        _doc_ids.sort()
-        return _doc_ids
+        _doc_ids = self.index.get(preprocess_text(term), set())
+        print(f"Retrived {len(_doc_ids)} document IDs for term: {term}")
+        return sorted(_doc_ids) if _doc_ids else []
     
     def get_tf(self, doc_id: int, term: str) -> int:
         """
@@ -69,8 +71,21 @@ class InvertedIndex:
         _tokens = get_tokens(preprocess_text(term))
         if len(_tokens) > 1:
             raise ValueError("Term should be a single token.")
-        return self.term_frequencies.get(doc_id, Counter()).get(term.lower(), 0)
-    
+        return self.term_frequencies.get(doc_id, Counter()).get(_tokens[0], 0)
+
+    def get_idf(self, term: str) -> float:
+        def calculate_idf(total_docs: int, doc_freq: int) -> float:
+            print(f"Calculating IDF for term '{term}': total_docs={total_docs}, doc_freq={doc_freq}")
+            _idf = math.log((total_docs + 1) / (doc_freq + 1))
+            return round(_idf, 2)
+        
+        total_docs = len(self.docmap)
+        doc_freq = 0
+        for doc_id in self.get_documents(term): 
+            if self.get_tf(doc_id, term) > 0:
+                doc_freq += 1
+        return calculate_idf(total_docs, doc_freq)    
+
     def build(self) -> None:
         """
             Build the inverted index from the movies data.
