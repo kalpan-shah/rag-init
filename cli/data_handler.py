@@ -22,6 +22,7 @@ if not os.path.exists(cache_dir):
 
 index_file_path = os.path.join(cache_dir, 'index.pkl')
 docmap_file_path = os.path.join(cache_dir, 'docmap.pkl')
+tf_file_path = os.path.join(cache_dir, 'term_frequencies.pkl')
 
 def load_data(file_path: str) -> dict:
     """

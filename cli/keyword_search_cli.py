@@ -12,7 +12,7 @@ import argparse
 
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
-from query_movie_data import search_movies, build_index # pylint: disable=wrong-import-position
+from query_movie_data import search_movies, build_index, get_term_frequency # pylint: disable=wrong-import-position
 
 def main() -> None:
     """
@@ -25,6 +25,10 @@ def main() -> None:
     subparsers.add_parser("build", help="Build the inverted index")
     search_parser.add_argument("query", type=str, help="search query")
 
+    tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document and term")
+    tf_parser.add_argument("doc_id", type=int, help="doc ID to retrieve term frequency for")
+    tf_parser.add_argument("term", type=str, help="term to retrieve frequency for")
+
     args = parser.parse_args()
 
     match args.command:
@@ -35,6 +39,12 @@ def main() -> None:
                 print(f"Searching for: {args.query}")
                 for i, movie in enumerate(search_movies(args.query)):
                     print(f"{i+1}. {movie['title']}")
+
+        case "tf":
+            if args.doc_id and args.term:
+                _tf: int = get_term_frequency(args.doc_id, args.term)
+                print(_tf)
+
         case _:
             parser.print_help()
 

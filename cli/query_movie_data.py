@@ -50,3 +50,22 @@ def search_movies(query: str) -> List[dict]:
     except Exception as e:
         print(f"Error loading index: {e}")
         return []
+
+
+def get_term_frequency(doc_id: int, term: str) -> int:
+    """
+        Get the term frequency for a given document and term.
+
+        Args:
+            doc_id (int): The ID of the document.
+            term (str): The term to retrieve frequency for.
+
+        Returns:
+            int: The term frequency.
+    """
+    try:
+        index.load()
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return 0
+    return index.get_tf(doc_id, term)

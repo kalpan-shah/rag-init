@@ -8,9 +8,10 @@
 """
 import os
 from typing import Dict, List, Set
+from collections import Counter
 import pickle
 from data_preprocessing import get_tokens, preprocess_text
-from data_handler import movie_data, index_file_path, docmap_file_path
+from data_handler import movie_data, index_file_path, docmap_file_path, tf_file_path
 
 class InvertedIndex:
     """
@@ -19,6 +20,7 @@ class InvertedIndex:
     def __init__(self):
         self.index: Dict[str, Set[int]] = {}
         self.docmap: Dict[int, object] = {} 
+        self.term_frequencies: Dict[str, Counter] = {}  
     
     def __add_document(self, doc_id: int, text: str) -> None:
         """
@@ -26,11 +28,11 @@ class InvertedIndex:
             Args:
                 doc_id (int): Unique identifier for the document
                 text (str): Text content of the document
-        """
+        """ 
         # preprocess text
-        text = preprocess_text(text)
+        trimmed_text = preprocess_text(text)
         # a. get tokens
-        tokens = get_tokens(text)
+        tokens = get_tokens(trimmed_text)
         # b. update index
         for token in tokens:
             # create a new set for the token if it doesn't exist
@@ -38,6 +40,10 @@ class InvertedIndex:
                 self.index[token] = set()
             # update the set of document IDs for the token
             self.index[token].add(doc_id)
+        # c. update docmap
+        self.docmap[doc_id] = text
+        # d. update term frequencies
+        self.term_frequencies[doc_id] = Counter(tokens)
 
     def get_documents(self, term: str) -> List[int]:
         """
@@ -51,6 +57,20 @@ class InvertedIndex:
         _doc_ids.sort()
         return _doc_ids
     
+    def get_tf(self, doc_id: int, term: str) -> int:
+        """
+            Retrieve the term frequency of a term in a specific document.
+            Args:
+                doc_id (int): The document ID
+                term (str): The search term
+            Returns:
+                int: The term frequency of the term in the document
+        """
+        _tokens = get_tokens(preprocess_text(term))
+        if len(_tokens) > 1:
+            raise ValueError("Term should be a single token.")
+        return self.term_frequencies.get(doc_id, Counter()).get(term.lower(), 0)
+    
     def build(self) -> None:
         """
             Build the inverted index from the movies data.
@@ -58,9 +78,6 @@ class InvertedIndex:
         for movie in movie_data:
             _in_text = f"{movie['title']} {movie['description']}"
             self.__add_document(movie['id'], _in_text)
-
-            # movie.update({'full_text': _in_text}) 
-            # self.docmap[movie['id']] = movie
         
         # Sort the document IDs for each token in the index for consistent retrieval
         for token in self.index:
@@ -79,6 +96,9 @@ class InvertedIndex:
         with open(docmap_file_path, 'wb') as d_f:
             pickle.dump(self.docmap, d_f)
 
+        with open(tf_file_path, 'wb') as tf_f:
+            pickle.dump(self.term_frequencies, tf_f)
+
     def load(self) -> None:
         """
             Load the inverted index and document mapping from disk using pickle.
@@ -92,3 +112,6 @@ class InvertedIndex:
         
         with open(docmap_file_path, 'rb') as f:
             self.docmap = pickle.load(f)
+
+        with open(tf_file_path, 'rb') as f:
+            self.term_frequencies = pickle.load(f)
