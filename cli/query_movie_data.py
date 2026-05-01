@@ -2,47 +2,51 @@
 @file:          cli/query_movie_data.py
 @description:   Helper functions for querying movie data
 @date:          30 April 2026
-@last edited:   30 April 2026
+@last edited:   01 April 2026
 @author:        Kalpan Shah
 @version:       1.0.0 
 """
-from typing import List 
+from typing import List
 from data_preprocessing import preprocess_text, get_tokens
 from data_handler import movie_data 
-from inverted_index import InvertedIndex 
+from inverted_index import InvertedIndex
+
+index = InvertedIndex()
 
 def build_index() -> None:
-    global index
-    index = InvertedIndex()
-    index.build()
-    docs = index.get_documents('merida')
-    first_val = docs[0]
-    print(f"First document for token 'merida' = {first_val}") 
+    """
+        Build the inverted index from the movie data
+    """
+    index.build() 
+
 
 def search_movies(query: str) -> List[dict]:
     """
-        V1 - Search for movies if the movie name contains the query string 
-            Text Processing:
-                a. Case insensitive search
-                b. punctuation removal
-                c. tokenization
+        V1 - Search for movies if the movie name contains the query string
+        V2 - Search for movies using the inverted index DS
+
+        Args:
+            query (str): The search query string
+
+        Returns:
+            List[dict]: A list of movie dictionaries that match the search query
     """
-    results = []
-    _query = preprocess_text(query)
-    _query_tokens = get_tokens(_query)
+    try:
+        index.load()
+        _query = preprocess_text(query)
+        _query_tokens = get_tokens(_query)
 
-    for movie in movie_data:
-        # Check if Valid movie dict
-        if not isinstance(movie, dict) or 'title' not in movie:
-            continue
+        doc_ids = set()
 
-        # text preprocessing
-        _movie_title = preprocess_text(movie['title'])
-        _movie_title_tokens = get_tokens(_movie_title)
-        _n_movie_title = " ".join(_movie_title_tokens)
+        for token in _query_tokens:
+            doc_ids.update(index.get_documents(token))
+        
+        doc_ids = sorted(doc_ids)[:5] # limit to top 5 results
+        
+        results = [movie for movie in movie_data if movie['id'] in doc_ids]
 
-        _token_match = any(token in _n_movie_title for token  in _query_tokens)
-        if _token_match:
-            results.append(movie)
-
-    return results
+        return results
+        
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return []

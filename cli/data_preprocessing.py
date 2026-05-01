@@ -46,4 +46,3 @@ def get_tokens(text: str) -> List[str]:
     _tokens = [stemmer.stem(token) for token in _tokens]
 
     return _tokens
-

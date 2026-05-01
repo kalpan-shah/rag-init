@@ -7,7 +7,7 @@
 @version:       1.0.0 
 """
 import os
-import json 
+import json
 from typing import List, Set
 
 

@@ -2,14 +2,14 @@
 @file:          cli/inverted_index.py
 @description:   Inverted index implementation for efficient keyword search
 @date:          29 April 2026 
-@last edited:   30 April 2026
+@last edited:   01 April 2026
 @author:        Kalpan Shah
 @version:       1.0.0 
 """
-
+import os
 from typing import Dict, List, Set
 import pickle
-from data_preprocessing import get_tokens
+from data_preprocessing import get_tokens, preprocess_text
 from data_handler import movie_data, index_file_path, docmap_file_path
 
 class InvertedIndex:
@@ -18,7 +18,7 @@ class InvertedIndex:
     """
     def __init__(self):
         self.index: Dict[str, Set[int]] = {}
-        self.docmap: Dict[int, object] = {}
+        self.docmap: Dict[int, object] = {} 
     
     def __add_document(self, doc_id: int, text: str) -> None:
         """
@@ -27,6 +27,8 @@ class InvertedIndex:
                 doc_id (int): Unique identifier for the document
                 text (str): Text content of the document
         """
+        # preprocess text
+        text = preprocess_text(text)
         # a. get tokens
         tokens = get_tokens(text)
         # b. update index
@@ -46,7 +48,7 @@ class InvertedIndex:
                 List[int]: A list of document IDs containing the term
         """
         _doc_ids = list(self.index.get(term.lower(), set()))
-        _doc_ids.sort() 
+        _doc_ids.sort()
         return _doc_ids
     
     def build(self) -> None:
@@ -56,7 +58,14 @@ class InvertedIndex:
         for movie in movie_data:
             _in_text = f"{movie['title']} {movie['description']}"
             self.__add_document(movie['id'], _in_text)
+
+            # movie.update({'full_text': _in_text}) 
+            # self.docmap[movie['id']] = movie
         
+        # Sort the document IDs for each token in the index for consistent retrieval
+        for token in self.index:
+            self.index[token] = set(sorted(self.index[token]))
+
         # save the index and docmap to disk
         self.save()
         
@@ -64,8 +73,22 @@ class InvertedIndex:
         """
             Save the inverted index and document mapping to disk using pickle.
         """
-        with open(index_file_path, 'wb') as f:
-            pickle.dump(self.index, f)
+        with open(index_file_path, 'wb') as i_f:
+            pickle.dump(self.index, i_f)
         
-        with open(docmap_file_path, 'wb') as f:
-            pickle.dump(self.docmap, f)
+        with open(docmap_file_path, 'wb') as d_f:
+            pickle.dump(self.docmap, d_f)
+
+    def load(self) -> None:
+        """
+            Load the inverted index and document mapping from disk using pickle.
+        """
+
+        if not os.path.exists(index_file_path) or not os.path.exists(docmap_file_path):
+            raise FileNotFoundError("Inverted index files not found. Please build the index first.")
+
+        with open(index_file_path, 'rb') as f:
+            self.index = pickle.load(f)
+        
+        with open(docmap_file_path, 'rb') as f:
+            self.docmap = pickle.load(f)
