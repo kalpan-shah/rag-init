@@ -87,3 +87,31 @@ def get_inverse_doc_freq(term: str) -> float:
         print(f"Error loading index: {e}")
         return 0.0
     return index.get_idf(term)
+
+def get_tfidf_score(doc_id: int, term: str) -> float:
+    """
+        Get teh TF-IDF score for a given document and term.
+
+        Args:
+            doc_id (int): The ID of the document.
+            term (str): The term to retrieve TF-IDF score for.
+
+        Returns:
+            float: The TF-IDF score.
+    """
+    try:
+        index.load()
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return 0.0
+    # tf_idf = 0.0
+    # for _token in get_tokens(preprocess_text(term)):
+    #     tf = index.get_tf(doc_id, _token)
+    #     idf = index.get_idf(_token)
+    #     tf_idf += tf * idf
+
+    tf = index.get_tf(doc_id, term)
+    idf = index.get_idf(term)
+    tf_idf = tf * idf
+    
+    return tf_idf

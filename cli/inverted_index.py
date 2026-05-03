@@ -77,7 +77,8 @@ class InvertedIndex:
         def calculate_idf(total_docs: int, doc_freq: int) -> float:
             print(f"Calculating IDF for term '{term}': total_docs={total_docs}, doc_freq={doc_freq}")
             _idf = math.log((total_docs + 1) / (doc_freq + 1))
-            return round(_idf, 2)
+            # return round(_idf, 2)
+            return _idf
         
         total_docs = len(self.docmap)
         doc_freq = 0

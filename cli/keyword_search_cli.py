@@ -13,7 +13,7 @@ import argparse
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
 from query_movie_data import search_movies, \
-    build_index, get_term_frequency, get_inverse_doc_freq  # pylint: disable=wrong-import-position
+    build_index, get_term_frequency, get_inverse_doc_freq, get_tfidf_score  # pylint: disable=wrong-import-position
 
 def main() -> None:
     """
@@ -36,6 +36,11 @@ def main() -> None:
     idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency for a term")
     idf_parser.add_argument("term", type=str, help="term to retrieve inverse document frequency for")
 
+    # Get the TF-IDF score for a given document and term
+    tfidf_parser = subparsers.add_parser("tfidf", help="Get the TF-IDF score for a document and term")
+    tfidf_parser.add_argument("doc_id", type=int, help="doc ID to retrieve TF-IDF score for")
+    tfidf_parser.add_argument("term", type=str, help="term to retrieve TF-IDF score for")
+
     args = parser.parse_args()
 
     match args.command:
@@ -57,6 +62,11 @@ def main() -> None:
                 _idf: float = get_inverse_doc_freq(args.term)
                 print(f"Inverse document frequency of '{args.term}': {_idf:.2f}")
 
+        case "tfidf":
+            if args.doc_id and args.term:
+                _tf_idf: float = get_tfidf_score(args.doc_id, args.term)
+                print(f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {_tf_idf:.2f}")
+        
         case _:
             parser.print_help()
 
