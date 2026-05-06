@@ -12,12 +12,15 @@ import argparse
 
 sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 
+# pylint: disable=wrong-import-position
 from query_movie_data import search_movies, \
-    build_index, get_term_frequency, get_inverse_doc_freq, get_tfidf_score  # pylint: disable=wrong-import-position
+    build_index, get_term_frequency, get_inverse_doc_freq, \
+    get_tfidf_score, get_bm25_inverse_doc_freq
+# pylint: enable=wrong-import-position
 
-def main() -> None:
+def command_line_interface() -> None:
     """
-        Entry point of the CLI App
+        Define the command line interface for the keyword search CLI
     """
     parser = argparse.ArgumentParser(description="Keyword search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available Commands")
@@ -34,41 +37,73 @@ def main() -> None:
 
     # Get the inverse doc frequency for a given term
     idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency for a term")
-    idf_parser.add_argument("term", type=str, help="term to retrieve inverse document frequency for")
+    idf_parser.add_argument("term", type=str,
+                            help="term to retrieve inverse document frequency for")
 
     # Get the TF-IDF score for a given document and term
-    tfidf_parser = subparsers.add_parser("tfidf", help="Get the TF-IDF score for a document and term")
+    tfidf_parser = subparsers.add_parser("tfidf",
+                                         help="Get the TF-IDF score for a document and term")
     tfidf_parser.add_argument("doc_id", type=int, help="doc ID to retrieve TF-IDF score for")
     tfidf_parser.add_argument("term", type=str, help="term to retrieve TF-IDF score for")
 
-    args = parser.parse_args()
+    # Get the BM25 IDF score for a given term
+    bm25_idf_parser = subparsers.add_parser("bm25idf", help="Get BM25 IDF score for a given term")
+    bm25_idf_parser.add_argument("term", type=str, help="Term to get BM25 IDF score for")
 
+    return parser
+
+def execute_command(arg_parser) -> None:
+    """
+        Execute the command based on the parsed arguments
+    """
+    args = arg_parser.parse_args()
     match args.command:
         case "build":
             build_index()
+
         case "search":
             if args.query:
-                print(f"Searching for: {args.query}")
-                for i, movie in enumerate(search_movies(args.query)):
-                    print(f"{i+1}. {movie['title']}")
+                raise ValueError("Search query is required for 'search' command")
+            print(f"Searching for: {args.query}")
+            for i, movie in enumerate(search_movies(args.query)):
+                print(f"{i+1}. {movie['title']}")
 
         case "tf":
-            if args.doc_id and args.term:
-                _tf: int = get_term_frequency(args.doc_id, args.term)
-                print(_tf)
+            if not args.doc_id or not args.term:
+                raise ValueError("Both doc_id and term are required for 'tf' command")
+            _tf: int = get_term_frequency(args.doc_id, args.term)
+            print(_tf)
 
         case "idf":
-            if args.term:
-                _idf: float = get_inverse_doc_freq(args.term)
-                print(f"Inverse document frequency of '{args.term}': {_idf:.2f}")
+            if not args.term:
+                raise ValueError("Term is required for 'idf' command")
+            _idf: float = get_inverse_doc_freq(args.term)
+            print(f"Inverse document frequency of '{args.term}': {_idf:.2f}")
 
         case "tfidf":
-            if args.doc_id and args.term:
-                _tf_idf: float = get_tfidf_score(args.doc_id, args.term)
-                print(f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {_tf_idf:.2f}")
-        
+            if not args.doc_id or not args.term:
+                raise ValueError("Both doc_id and term are required for 'tfidf' command")
+            _tf_idf: float = get_tfidf_score(args.doc_id, args.term)
+            print(f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {_tf_idf:.2f}")
+
+        case "bm25idf":
+            if not args.term:
+                raise ValueError("Term is required for 'bm25idf' command")
+
+            _bm25_idf: float = get_bm25_inverse_doc_freq(args.term)
+            print(f"BM25 IDF score of '{args.term}': {_bm25_idf:.2f}")
+
         case _:
-            parser.print_help()
+            arg_parser.print_help()
+
+
+def main() -> None:
+    """
+        Entry point of the CLI App
+    """
+    _parser = command_line_interface()
+    execute_command(_parser)
+
 
 if __name__ == "__main__":
     main()

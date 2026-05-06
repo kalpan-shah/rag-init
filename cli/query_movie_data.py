@@ -8,7 +8,7 @@
 """
 from typing import List
 from data_preprocessing import preprocess_text, get_tokens
-from data_handler import movie_data 
+from data_handler import movie_data
 from inverted_index import InvertedIndex
 
 index = InvertedIndex()
@@ -17,7 +17,7 @@ def build_index() -> None:
     """
         Build the inverted index from the movie data
     """
-    index.build() 
+    index.build()
 
 
 def search_movies(query: str) -> List[dict]:
@@ -40,13 +40,13 @@ def search_movies(query: str) -> List[dict]:
 
         for token in _query_tokens:
             doc_ids.update(index.get_documents(token))
-        
+
         doc_ids = sorted(doc_ids)[:5] # limit to top 5 results
         
         results = [movie for movie in movie_data if movie['id'] in doc_ids]
 
         return results
-        
+
     except Exception as e:
         print(f"Error loading index: {e}")
         return []
@@ -88,6 +88,23 @@ def get_inverse_doc_freq(term: str) -> float:
         return 0.0
     return index.get_idf(term)
 
+def get_bm25_inverse_doc_freq(term: str) -> float:
+    """
+        Get the BM25 inverse document frequency for a given term.
+
+        Args:
+            term (str): The term to retrieve BM25 IDF for.
+
+        Returns:
+            float: The BM25 inverse document frequency.
+    """
+    try:
+        index.load()
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return 0.0
+    return index.get_bm25_idf(term)
+
 def get_tfidf_score(doc_id: int, term: str) -> float:
     """
         Get teh TF-IDF score for a given document and term.
@@ -113,5 +130,5 @@ def get_tfidf_score(doc_id: int, term: str) -> float:
     tf = index.get_tf(doc_id, term)
     idf = index.get_idf(term)
     tf_idf = tf * idf
-    
+
     return tf_idf
