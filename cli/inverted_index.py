@@ -14,6 +14,7 @@ import pickle
 from data_preprocessing import get_tokens, preprocess_text
 from data_handler import movie_data, index_file_path, docmap_file_path, tf_file_path
 
+
 class InvertedIndex:
     """
         Inverted index data structure for efficient keyword search.
@@ -72,6 +73,24 @@ class InvertedIndex:
         if len(_tokens) > 1:
             raise ValueError("Term should be a single token.")
         return self.term_frequencies.get(doc_id, Counter()).get(_tokens[0], 0)
+
+    def get_bm25_tf(self, doc_id: int, term: str, K1: float) -> float:
+        """
+            Retrieve the BM25 term frequency for a term in a specific document.
+            Args:
+                doc_id (int): The document ID
+                term (str): The search term
+                K1 (float): The BM25 parameter
+
+            Returns:
+                float: The BM25 improved term frequency of the term in the document
+        """
+        def calculate_bm25_tf(tf: int, k1: float) -> float:
+            return (tf * (k1 + 1)) / (tf + k1)
+        basic_tf = self.get_tf(doc_id, term)
+
+        # BM25 term frequency calculation
+        return calculate_bm25_tf(basic_tf, K1)
 
     def get_idf(self, term: str) -> float:
         """

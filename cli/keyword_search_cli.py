@@ -1,10 +1,10 @@
-""" 
+"""
 @file:          cli/keyword_search_cli.py
 @description:   Keyword search CLI for finding movies
-@date:          29 April 2026 
+@date:          29 April 2026
 @last edited:   30 April 2026
 @author:        Kalpan Shah
-@version:       1.0.0 
+@version:       1.0.0
 """
 import os
 import sys
@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 # pylint: disable=wrong-import-position
 from query_movie_data import search_movies, \
     build_index, get_term_frequency, get_inverse_doc_freq, \
-    get_tfidf_score, get_bm25_inverse_doc_freq
+    get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, BM25_K1
 # pylint: enable=wrong-import-position
 
 def command_line_interface() -> None:
@@ -49,6 +49,13 @@ def command_line_interface() -> None:
     # Get the BM25 IDF score for a given term
     bm25_idf_parser = subparsers.add_parser("bm25idf", help="Get BM25 IDF score for a given term")
     bm25_idf_parser.add_argument("term", type=str, help="Term to get BM25 IDF score for")
+
+    bm25_tf_parser = subparsers.add_parser(
+        "bm25tf", help="Get BM25 TF score for a given document ID and term"
+    )
+    bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
+    bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
 
     return parser
 
@@ -92,6 +99,13 @@ def execute_command(arg_parser) -> None:
 
             _bm25_idf: float = get_bm25_inverse_doc_freq(args.term)
             print(f"BM25 IDF score of '{args.term}': {_bm25_idf:.2f}")
+
+        case "bm25tf":
+            if not args.doc_id or not args.term:
+                raise ValueError("Both doc_id and term are required for 'bm25tf' command")
+
+            _bm25_tf: float = get_bm25_term_frequency(args.doc_id, args.term, args.k1)
+            print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {_bm25_tf:.2f}")
 
         case _:
             arg_parser.print_help()

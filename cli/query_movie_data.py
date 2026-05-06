@@ -1,15 +1,18 @@
-""" 
+"""
 @file:          cli/query_movie_data.py
 @description:   Helper functions for querying movie data
 @date:          30 April 2026
 @last edited:   01 April 2026
 @author:        Kalpan Shah
-@version:       1.0.0 
+@version:       1.0.0
 """
 from typing import List
 from data_preprocessing import preprocess_text, get_tokens
 from data_handler import movie_data
 from inverted_index import InvertedIndex
+
+# Constants
+BM25_K1 = 1.5
 
 index = InvertedIndex()
 
@@ -42,7 +45,7 @@ def search_movies(query: str) -> List[dict]:
             doc_ids.update(index.get_documents(token))
 
         doc_ids = sorted(doc_ids)[:5] # limit to top 5 results
-        
+
         results = [movie for movie in movie_data if movie['id'] in doc_ids]
 
         return results
@@ -70,6 +73,24 @@ def get_term_frequency(doc_id: int, term: str) -> int:
         return 0
     return index.get_tf(doc_id, term)
 
+def get_bm25_term_frequency(doc_id: int, term: str, k1: float) -> float:
+    """
+        Get the BM25 term frequency for a given document and term.
+
+        Args:
+            doc_id (int): The ID of the document.
+            term (str): The term to retrieve BM25 term frequency for.
+            k1 (int): The BM25 parameter
+
+        Returns:
+            float: The BM25 term frequency.
+    """
+    try:
+        index.load()
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return 0.0
+    return index.get_bm25_tf(doc_id, term, k1)
 
 def get_inverse_doc_freq(term: str) -> float:
     """
