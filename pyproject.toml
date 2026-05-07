@@ -4,4 +4,7 @@ version = "0.1.0"
 description = "Searching through AI Lens "
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "nltk>=3.9.4",
+    "pylint>=4.0.5",
+]
