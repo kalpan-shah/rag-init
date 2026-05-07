@@ -26,6 +26,7 @@ class InvertedIndex:
         self.term_frequencies: Dict[str, Counter] = {}
         self.doc_lengths: Dict[int, int] = {}
         self.avg_doc_length: float = 0.0
+        self.tf_cache: Dict[tuple, int] = {}
 
     def __add_document(self, doc_id: int, text: str) -> None:
         """
@@ -75,7 +76,7 @@ class InvertedIndex:
                 List[int]: A list of document IDs containing the term
         """
         _doc_ids = self.index.get(preprocess_text(term), set())
-        print(f"Retrived {len(_doc_ids)} document IDs for term: {term}")
+        # print(f"Retrived {len(_doc_ids)} document IDs for term: {term}")
         return sorted(_doc_ids) if _doc_ids else []
 
     def get_tf(self, doc_id: int, term: str) -> int:
@@ -87,10 +88,14 @@ class InvertedIndex:
             Returns:
                 int: The term frequency of the term in the document
         """
+        if (doc_id, term) in self.tf_cache:
+            return self.tf_cache[(doc_id, term)]
         _tokens = get_tokens(preprocess_text(term))
         if len(_tokens) > 1:
             raise ValueError("Term should be a single token.")
-        return self.term_frequencies.get(doc_id, Counter()).get(_tokens[0], 0)
+        _tf = self.term_frequencies.get(doc_id, Counter()).get(_tokens[0], 0)
+        self.tf_cache[(doc_id, term)] = _tf
+        return _tf
 
     def get_bm25_tf(self, doc_id: int, term: str, K1: float, B: float) -> float:
         """
@@ -121,8 +126,8 @@ class InvertedIndex:
                 float: The inverse document frequency for the term
         """
         def calculate_idf(total_docs: int, doc_freq: int) -> float:
-            print(f"Calculating IDF for term '{term}': "
-                  f"total_docs={total_docs}, doc_freq={doc_freq}")
+            # print(f"Calculating IDF for term '{term}': "
+            #       f"total_docs={total_docs}, doc_freq={doc_freq}")
             _idf = math.log((total_docs + 1) / (doc_freq + 1))
             # return round(_idf, 2)
             return _idf
@@ -143,8 +148,8 @@ class InvertedIndex:
                 float: The BM25 inverse document frequency for the term
         """
         def calculate_bm25_idf(total_docs: int, doc_freq: int) -> float:
-            print(f"Calculating BM25 IDF for term '{term}': "
-                  f"total_docs={total_docs}, doc_freq={doc_freq}")
+            # print(f"Calculating BM25 IDF for term '{term}': "
+            #   f"total_docs={total_docs}, doc_freq={doc_freq}")
             _idf = math.log((total_docs - doc_freq + 0.5) / (doc_freq + 0.5) + 1)
             return _idf
 

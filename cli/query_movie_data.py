@@ -6,7 +6,7 @@
 @author:        Kalpan Shah
 @version:       1.0.0
 """
-from typing import List
+from typing import List, Dict
 from data_preprocessing import preprocess_text, get_tokens
 from data_handler import movie_data
 from inverted_index import InvertedIndex
@@ -23,6 +23,50 @@ def build_index() -> None:
     """
     index.build()
 
+def bm25_search_movies(query: str, limit: int) -> List[tuple]:
+    """
+        Search for movies using the BM25 ranking function.
+
+        Args:
+            query (str): The search query string
+            limit (int): The maximum number of results to return
+
+        Returns:
+            List[tuple]: A list of tuples containing (doc_id, score, title) for movies that match the search query
+    """
+    try:
+        index.load()
+        _query = preprocess_text(query)
+        # 1. Tokenize the query
+        _query_tokens = get_tokens(_query)
+        # 2. Init scores dict
+        _query_scores: Dict[int, float] = {}
+        _movies: List[tuple[int, float, str]] = []
+        doc_ids = set()
+
+        for token in _query_tokens:
+            doc_ids.update(index.get_documents(token))
+
+        # 3. for each doc_id, calculate the BM25 score
+        for doc_id in doc_ids:
+            score = 0.0
+            for token in _query_tokens:
+                score += get_bm25_tfidf_score(doc_id, token)
+            _query_scores[doc_id] = score
+        
+        _query_scores = sorted(_query_scores.items(), key=lambda x:x[1], reverse=True)  # sort by score descending
+
+        # 4. enforce the limit  
+        for doc_id, score in _query_scores[:limit]:
+            for movie in movie_data:
+                if movie['id'] == doc_id:
+                    _movies.append((doc_id, score, movie['title']))
+
+        return _movies
+
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return []
 
 def search_movies(query: str) -> List[dict]:
     """
@@ -155,3 +199,28 @@ def get_tfidf_score(doc_id: int, term: str) -> float:
     tf_idf = tf * idf
 
     return tf_idf
+
+def get_bm25_tfidf_score(doc_id: int, term: str, k1: float=BM25_K1, b: float=BM25_B) -> float:
+    """
+        Get the BM25 TF-IDF score for a given document and term.
+
+        Args:
+            doc_id (int): The ID of the document.
+            term (str): The term to retrieve BM25 TF-IDF score for.
+            k1 (float): The BM25 parameter
+            b (float): The BM25 Length normalization strength parameter
+
+        Returns:
+            float: The BM25 TF-IDF score.
+    """
+    # try:
+    #     index.load()
+    # except Exception as e:
+    #     print(f"Error loading index: {e}")
+    #     return 0.0
+
+    bm25_tf = index.get_bm25_tf(doc_id, term, k1, b)
+    bm25_idf = index.get_bm25_idf(term)
+    bm25_tfidf = bm25_tf * bm25_idf
+
+    return bm25_tfidf

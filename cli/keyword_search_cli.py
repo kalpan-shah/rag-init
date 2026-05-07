@@ -15,7 +15,8 @@ sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 # pylint: disable=wrong-import-position
 from query_movie_data import search_movies, \
     build_index, get_term_frequency, get_inverse_doc_freq, \
-    get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, BM25_K1, BM25_B
+    get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, \
+    bm25_search_movies, BM25_K1, BM25_B
 # pylint: enable=wrong-import-position
 
 def command_line_interface() -> None:
@@ -25,10 +26,16 @@ def command_line_interface() -> None:
     parser = argparse.ArgumentParser(description="Keyword search CLI")
     subparsers = parser.add_subparsers(dest="command", help="Available Commands")
 
+    subparsers.add_parser("build", help="Build the inverted index")
+
     # Keyword search for movie names
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
-    subparsers.add_parser("build", help="Build the inverted index")
     search_parser.add_argument("query", type=str, help="search query")
+
+    # BM25 Keyword Search for movie names
+    bm25_search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25_search_parser.add_argument("query", type=str, help="search query")
+    bm25_search_parser.add_argument("limit", type=int, nargs='?', default=5, help="maximum number of results to return")
 
     # Get the term frequency for a given document and term
     tf_parser = subparsers.add_parser("tf", help="Get term frequency for a document and term")
@@ -69,11 +76,18 @@ def execute_command(arg_parser) -> None:
             build_index()
 
         case "search":
-            if args.query:
+            if not args.query:
                 raise ValueError("Search query is required for 'search' command")
             print(f"Searching for: {args.query}")
             for i, movie in enumerate(search_movies(args.query)):
                 print(f"{i+1}. {movie['title']}")
+
+        case "bm25search":
+            if not args.query:
+                raise ValueError("Search query is required for 'bm25search' command")
+            print(f"Searching for: {args.query}")
+            for i, (doc_id, score, title) in enumerate(bm25_search_movies(args.query, args.limit)):
+                print(f"{i+1}. ({doc_id}) {title} - Score: {score:.2f}")
 
         case "tf":
             if not args.doc_id or not args.term:
