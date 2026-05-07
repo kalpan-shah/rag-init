@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
 # pylint: disable=wrong-import-position
 from query_movie_data import search_movies, \
     build_index, get_term_frequency, get_inverse_doc_freq, \
-    get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, BM25_K1
+    get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, BM25_K1, BM25_B
 # pylint: enable=wrong-import-position
 
 def command_line_interface() -> None:
@@ -56,7 +56,7 @@ def command_line_interface() -> None:
     bm25_tf_parser.add_argument("doc_id", type=int, help="Document ID")
     bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
     bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
-
+    bm25_tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 B parameter")
     return parser
 
 def execute_command(arg_parser) -> None:
@@ -104,7 +104,7 @@ def execute_command(arg_parser) -> None:
             if not args.doc_id or not args.term:
                 raise ValueError("Both doc_id and term are required for 'bm25tf' command")
 
-            _bm25_tf: float = get_bm25_term_frequency(args.doc_id, args.term, args.k1)
+            _bm25_tf: float = get_bm25_term_frequency(args.doc_id, args.term, args.k1, args.b)
             print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {_bm25_tf:.2f}")
 
         case _:

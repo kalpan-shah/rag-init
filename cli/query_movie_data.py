@@ -13,6 +13,7 @@ from inverted_index import InvertedIndex
 
 # Constants
 BM25_K1 = 1.5
+BM25_B = 0.75  # Normalization Strength
 
 index = InvertedIndex()
 
@@ -73,7 +74,7 @@ def get_term_frequency(doc_id: int, term: str) -> int:
         return 0
     return index.get_tf(doc_id, term)
 
-def get_bm25_term_frequency(doc_id: int, term: str, k1: float) -> float:
+def get_bm25_term_frequency(doc_id: int, term: str, k1: float, b: float) -> float:
     """
         Get the BM25 term frequency for a given document and term.
 
@@ -81,6 +82,7 @@ def get_bm25_term_frequency(doc_id: int, term: str, k1: float) -> float:
             doc_id (int): The ID of the document.
             term (str): The term to retrieve BM25 term frequency for.
             k1 (int): The BM25 parameter
+            b (int): The BM25 Length normalization strength parameter
 
         Returns:
             float: The BM25 term frequency.
@@ -90,7 +92,7 @@ def get_bm25_term_frequency(doc_id: int, term: str, k1: float) -> float:
     except Exception as e:
         print(f"Error loading index: {e}")
         return 0.0
-    return index.get_bm25_tf(doc_id, term, k1)
+    return index.get_bm25_tf(doc_id, term, k1,b)
 
 def get_inverse_doc_freq(term: str) -> float:
     """

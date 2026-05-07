@@ -12,7 +12,8 @@ from typing import Dict, List, Set
 from collections import Counter
 import pickle
 from data_preprocessing import get_tokens, preprocess_text
-from data_handler import movie_data, index_file_path, docmap_file_path, tf_file_path
+from data_handler import movie_data, index_file_path, docmap_file_path, tf_file_path, \
+    doclen_file_path
 
 
 class InvertedIndex:
@@ -23,6 +24,8 @@ class InvertedIndex:
         self.index: Dict[str, Set[int]] = {}
         self.docmap: Dict[int, object] = {}
         self.term_frequencies: Dict[str, Counter] = {}
+        self.doc_lengths: Dict[int, int] = {}
+        self.avg_doc_length: float = 0.0
 
     def __add_document(self, doc_id: int, text: str) -> None:
         """
@@ -47,6 +50,21 @@ class InvertedIndex:
         self.docmap[doc_id] = trimmed_text # text
         # d. update term frequencies
         self.term_frequencies[doc_id] = Counter(tokens)
+        # e. update document length
+        self.doc_lengths[doc_id] = len(tokens)
+
+    def __get_avg_doc_length(self) -> float:
+        """
+            Calculate the average document length across all documents in the index.
+            Returns:
+                float: The average document length
+        """
+        total_docs = len(self.docmap)
+        if total_docs == 0:
+            return 0.0
+        total_length = sum(self.doc_lengths.values())
+        avg_length = total_length / total_docs
+        return avg_length
 
     def get_documents(self, term: str) -> List[int]:
         """
@@ -74,23 +92,25 @@ class InvertedIndex:
             raise ValueError("Term should be a single token.")
         return self.term_frequencies.get(doc_id, Counter()).get(_tokens[0], 0)
 
-    def get_bm25_tf(self, doc_id: int, term: str, K1: float) -> float:
+    def get_bm25_tf(self, doc_id: int, term: str, K1: float, B: float) -> float:
         """
             Retrieve the BM25 term frequency for a term in a specific document.
             Args:
                 doc_id (int): The document ID
                 term (str): The search term
                 K1 (float): The BM25 parameter
+                B (float): The BM25 Length normalization strength parameter
 
             Returns:
                 float: The BM25 improved term frequency of the term in the document
         """
-        def calculate_bm25_tf(tf: int, k1: float) -> float:
-            return (tf * (k1 + 1)) / (tf + k1)
+        def calculate_bm25_tf(tf: int, k1: float, b: float, doc_length: int) -> float:
+            length_normalizer = 1 - b + b * (doc_length / self.avg_doc_length)
+            return (tf * (k1 + 1)) / (tf + k1 * length_normalizer)
         basic_tf = self.get_tf(doc_id, term)
 
         # BM25 term frequency calculation
-        return calculate_bm25_tf(basic_tf, K1)
+        return calculate_bm25_tf(basic_tf, K1, B, self.doc_lengths[doc_id])
 
     def get_idf(self, term: str) -> float:
         """
@@ -163,6 +183,9 @@ class InvertedIndex:
         with open(tf_file_path, 'wb') as tf_f:
             pickle.dump(self.term_frequencies, tf_f)
 
+        with open(doclen_file_path, 'wb') as dl_f:
+            pickle.dump(self.doc_lengths, dl_f)
+
     def load(self) -> None:
         """
             Load the inverted index and document mapping from disk using pickle.
@@ -179,3 +202,9 @@ class InvertedIndex:
 
         with open(tf_file_path, 'rb') as f:
             self.term_frequencies = pickle.load(f)
+
+        with open(doclen_file_path, 'rb') as f:
+            self.doc_lengths = pickle.load(f)
+
+        # calc the average document length after loading
+        self.avg_doc_length = self.__get_avg_doc_length()
