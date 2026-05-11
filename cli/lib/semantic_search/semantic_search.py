@@ -7,6 +7,7 @@
 @version:       1.0.0
 """
 from sentence_transformers import SentenceTransformer
+from torch import embedding
 
 class SemanticSearch:
     """
@@ -23,7 +24,7 @@ class SemanticSearch:
             Args:
                 text (str): Input text to encode
             Returns:
-                np.ndarray: Dense vector representation of the input text
+                List[np.ndarray]: Dense vector representation of the input text
         """
         return self.model.encode(text)
 
@@ -45,7 +46,30 @@ class SemanticSearch:
         """
         self._max_sequence_length = value
 
+    def generate_embedding(self, text: str):
+        """
+            Generate a dense vector embedding for the input text.
+            Args:
+                text (str): Input text to generate embedding using the encode method
+
+            Returns:
+                embedding (np.ndarray): Return the first Index of List returned by the encode method
+        """
+        if not text:
+            raise ValueError("Input text cannot be empty")
+        embeddings = self.encode([text])
+        return embeddings[0]
+
 def verify_model():
     _searcher = SemanticSearch()
     print(f"Model loaded: {_searcher.model}")
     print(f"Max sequence length: {_searcher.max_sequence_length}")
+
+
+def embed_text(text: str) -> None:
+    _searcher = SemanticSearch()
+    print(f"Text: {text}")
+    embedding = _searcher.generate_embedding(text)
+    print(f"First 3 dimensions: {embedding[:3]}")
+    print(f"Dimensions: {embedding.shape[0]}")
+    print(type(embedding))

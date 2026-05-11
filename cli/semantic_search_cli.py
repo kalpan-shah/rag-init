@@ -10,7 +10,9 @@ import os
 import sys
 import argparse
 
-sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
+sys.path.append(os.getcwd())  # Add cli to path for imports
+
+from cli.lib.semantic_search import verify_model, embed_text
 
 def main() -> None:
     """
@@ -21,14 +23,20 @@ def main() -> None:
 
     subparsers.add_parser("verify", help="Verify that the semantic search model is loaded correctly")
     
+    embedding_gen_parser = subparsers.add_parser("embed_text", help="Generate an embedding for the input text")
+    embedding_gen_parser.add_argument("text", help="Input text to generate embedding for")
+
 
     args = parser.parse_args()
 
 
     match args.command:
         case "verify":
-            from lib.semantic_search import verify_model
             verify_model()
+
+        case "embed_text":
+            embed_text(args.text)
+        
         case _:
             parser.print_help()
 
