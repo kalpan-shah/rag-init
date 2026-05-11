@@ -10,10 +10,10 @@ import os
 import sys
 import argparse
 
-sys.path.append(os.path.join(os.getcwd(), 'cli'))  # Add cli to path for imports
+sys.path.append(os.getcwd())  # Add root to path for imports 
 
 # pylint: disable=wrong-import-position
-from query_movie_data import search_movies, \
+from cli.lib.keyword_search.query_movie_data import search_movies, \
     build_index, get_term_frequency, get_inverse_doc_freq, \
     get_tfidf_score, get_bm25_inverse_doc_freq, get_bm25_term_frequency, \
     bm25_search_movies, BM25_K1, BM25_B

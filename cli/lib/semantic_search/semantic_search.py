@@ -1,13 +1,11 @@
 """
-@file:          cli/lib/semantic_search.py
+@file:          cli/lib/semantic_search/semantic_search.py
 @description:   Semantic search implementation for finding movies
 @date:          08 May 2026
 @last edited:   08 May 2026
 @author:        Kalpan Shah
 @version:       1.0.0
 """
-from xml.parsers.expat import model
-
 from sentence_transformers import SentenceTransformer
 
 class SemanticSearch:

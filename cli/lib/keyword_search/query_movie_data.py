@@ -7,9 +7,9 @@
 @version:       1.0.0
 """
 from typing import List, Dict
-from data_preprocessing import preprocess_text, get_tokens
-from data_handler import movie_data
-from inverted_index import InvertedIndex
+from cli.lib.keyword_search.data_preprocessing import preprocess_text, get_tokens
+from cli.lib.data_handler import movie_data
+from cli.lib.keyword_search.inverted_index import InvertedIndex
 
 # Constants
 BM25_K1 = 1.5

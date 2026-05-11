@@ -10,7 +10,7 @@ from typing import List
 import string
 from nltk.stem import PorterStemmer
 
-from data_handler import stop_words
+from cli.lib.data_handler import stop_words
 
 stemmer = PorterStemmer()
 
