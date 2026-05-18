@@ -1,8 +1,8 @@
 """
-@file:          cli/inverted_index.py
+@file:          cli/lib/keyword_search/inverted_index.py
 @description:   Inverted index implementation for efficient keyword search
 @date:          29 April 2026
-@last edited:   01 April 2026
+@last edited:   11 May 2026
 @author:        Kalpan Shah
 @version:       1.0.0
 """
@@ -11,8 +11,9 @@ import math
 from typing import Dict, List, Set
 from collections import Counter
 import pickle
-from data_preprocessing import get_tokens, preprocess_text
-from data_handler import movie_data, index_file_path, docmap_file_path, tf_file_path, \
+from cli.lib.keyword_search.data_preprocessing import get_tokens, preprocess_text
+from cli.lib.data_handler import movie_data
+from cli.lib.keyword_search.cache_paths import index_file_path, docmap_file_path, tf_file_path, \
     doclen_file_path
 
 
