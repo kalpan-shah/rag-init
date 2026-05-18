@@ -6,8 +6,15 @@
 @author:        Kalpan Shah
 @version:       1.0.0
 """
+import os
+import pickle
+from typing import List
 from sentence_transformers import SentenceTransformer
-from torch import embedding
+import numpy as np
+
+embeddings_file = os.path.join(os.getcwd(), 'cache', 'movie_embeddings.npy')
+docmap_file_path = os.path.join(os.getcwd(), 'cache', 'docmap.pkl')
+
 
 class SemanticSearch:
     """
@@ -18,6 +25,10 @@ class SemanticSearch:
         self._max_sequence_length = 0
         self.max_sequence_length = self.model.get_max_seq_length()
 
+        self.embeddings = None
+        self.documents = None
+        self.document_map = None
+
     def encode(self, text: str):
         """
             Encode the input text into a dense vector representation.
@@ -26,7 +37,7 @@ class SemanticSearch:
             Returns:
                 List[np.ndarray]: Dense vector representation of the input text
         """
-        return self.model.encode(text)
+        return self.model.encode(text, show_progress_bar=True)
 
     @property
     def max_sequence_length(self) -> int:
@@ -60,16 +71,33 @@ class SemanticSearch:
         embeddings = self.encode([text])
         return embeddings[0]
 
-def verify_model():
-    _searcher = SemanticSearch()
-    print(f"Model loaded: {_searcher.model}")
-    print(f"Max sequence length: {_searcher.max_sequence_length}")
+    def build_embeddings(self, documents: List[dict]):
+        """
+            Build dense vector embeddings for a list of documents.
+            Args:
+                documents (List[dict]): List of documents to build embeddings for
+        """
+        self.documents = documents
+        self.document_map = {doc['id']: doc for doc in documents}
+        texts = ["{}: {}".format(doc['title'], doc['description']) for doc in documents]
+        self.embeddings = self.encode(texts)
 
+        np.save(embeddings_file, self.embeddings)
 
-def embed_text(text: str) -> None:
-    _searcher = SemanticSearch()
-    print(f"Text: {text}")
-    embedding = _searcher.generate_embedding(text)
-    print(f"First 3 dimensions: {embedding[:3]}")
-    print(f"Dimensions: {embedding.shape[0]}")
-    print(type(embedding))
+        return self.embeddings
+
+    def load_or_create_embeddings(self, documents: List[dict]):
+        """
+            Load existing embeddings from disk or create new embeddings if they don't exist.
+            Args:
+                documents (List[dict]): List of documents to build embeddings for if they don't exist
+        """
+        if os.path.exists(embeddings_file) and self.embeddings is None:
+            self.embeddings = np.load(embeddings_file)
+        elif self.embeddings is None:
+            self.build_embeddings(documents)
+        
+        # Load documents and document map if not already loaded
+        self.documents = documents
+        with open(docmap_file_path, 'rb') as d_f:
+            self.document_map = pickle.load(d_f)

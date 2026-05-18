@@ -1,1 +1,1 @@
-from cli.lib.semantic_search.semantic_search import *
+from cli.lib.semantic_search.doc_search import *
