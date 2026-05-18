@@ -12,7 +12,8 @@ import argparse
 
 sys.path.append(os.getcwd())  # Add cli to path for imports
 
-from cli.lib.semantic_search import verify_model, embed_text, verify_embeddings
+from cli.lib.semantic_search import verify_model, embed_text, verify_embeddings, \
+    embed_query_text
 
 def main() -> None:
     """
@@ -28,6 +29,8 @@ def main() -> None:
 
     subparsers.add_parser("verify_embeddings", help="Verify that the embeddings are generated and loaded correctly")
 
+    query_parser = subparsers.add_parser("embed_query", help="Convers user search query in embedding vectors")
+    query_parser.add_argument("query", help="Input query to generate embeddings for")
 
     args = parser.parse_args()
 
@@ -42,6 +45,9 @@ def main() -> None:
         case "verify_embeddings":
             verify_embeddings()
         
+        case "embed_query":
+            embed_query_text(args.query)
+
         case _:
             parser.print_help()
 

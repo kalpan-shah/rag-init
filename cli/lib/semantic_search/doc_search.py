@@ -21,3 +21,11 @@ def embed_text(text: str) -> None:
     print(f"First 3 dimensions: {embedding[:3]}")
     print(f"Dimensions: {embedding.shape[0]}")
     print(type(embedding))
+
+def embed_query_text(query: str) -> None:
+    _searcher = SemanticSearch()
+    print(f"Query: {query}")
+
+    embedding = _searcher.generate_embedding(query)
+    print(f"First 3 dimensions: {embedding[:3]}")
+    print(f"Shape: {embedding.shape}")
