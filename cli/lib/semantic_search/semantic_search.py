@@ -77,14 +77,14 @@ class SemanticSearch:
             Args:
                 documents (List[dict]): List of documents to build embeddings for
         """
-        self.documents = documents
+        self.documents = sorted(documents, key=lambda x: x['id'])
         self.document_map = {doc['id']: doc for doc in documents}
 
         # NOTE: so there'll be duplication as we have seen during tf-idf
         #   So we must record embeddings with unique texts only
         #   Making sure mapped with the docs.
         #   Skipping the Above as of now, cause auto grader 😐
-        texts = ["{}: {}".format(doc['title'], doc['description']) for doc in documents]
+        texts = ["{}: {}".format(doc['title'], doc['description']) for doc in self.documents]
         self.embeddings = self.encode(texts)
 
         np.save(embeddings_file, self.embeddings)
@@ -101,8 +101,44 @@ class SemanticSearch:
             self.embeddings = np.load(embeddings_file)
         elif self.embeddings is None:
             self.build_embeddings(documents)
-        
+
         # Load documents and document map if not already loaded
         self.documents = documents
         with open(docmap_file_path, 'rb') as d_f:
             self.document_map = pickle.load(d_f)
+
+    def search(self, query: str, limit: int) -> None:
+        if self.embeddings is None:
+            raise ValueError("No embeddings loaded. Call `load_or_create_embeddings` first.")
+
+
+        _query_embeddings = self.generate_embedding(query)
+        similarity_score_list = self.get_similarity_score(_query_embeddings)
+
+        return [{'score': _score, 'title':  document['title'], 'description': document['description']} for _score, document in similarity_score_list[:limit]]
+
+    def get_similarity_score(self, query_embeddings: np.ndarray) -> List[tuple]:
+        _similarity_score_map = []
+        for idx in range(len(self.documents)):
+            doc_embeddings = self.embeddings[idx]
+            _score = cosine_similarity(query_embeddings, doc_embeddings)
+            _similarity_score_map.append((_score, self.documents[idx]))
+
+        return sorted(_similarity_score_map, key=lambda x:x[0], reverse=True)
+
+
+
+
+# region Helper functions
+
+def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> None:
+    _dot_product  = np.dot(vec1, vec2)
+    mod_v1 = np.linalg.norm(vec1)
+    mod_v2 = np.linalg.norm(vec2)
+
+    if mod_v1 == 0 or mod_v2 == 0:
+        return 0.0
+
+    return _dot_product / (mod_v1 * mod_v2)
+
+#endregion

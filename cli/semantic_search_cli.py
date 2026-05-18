@@ -13,7 +13,7 @@ import argparse
 sys.path.append(os.getcwd())  # Add cli to path for imports
 
 from cli.lib.semantic_search import verify_model, embed_text, verify_embeddings, \
-    embed_query_text
+    embed_query_text, search
 
 def main() -> None:
     """
@@ -32,6 +32,10 @@ def main() -> None:
     query_parser = subparsers.add_parser("embed_query", help="Convers user search query in embedding vectors")
     query_parser.add_argument("query", help="Input query to generate embeddings for")
 
+    search_parser = subparsers.add_parser("search", help="Search for a movie using semantic search")
+    search_parser.add_argument("query", type=str, help="Movie query to search for")
+    search_parser.add_argument("--limit", type=int, nargs='?', default=5, help="maximum number of results to return")
+
     args = parser.parse_args()
 
 
@@ -47,6 +51,9 @@ def main() -> None:
         
         case "embed_query":
             embed_query_text(args.query)
+
+        case "search":
+            search(args.query, args.limit)
 
         case _:
             parser.print_help()
